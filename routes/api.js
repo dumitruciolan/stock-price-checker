@@ -1,32 +1,7 @@
 "use strict";
 
-const { expect } = require("chai");
-const fetch = require("node-fetch");
-const mongoose = require("mongoose");
-
-// mongo db model
-const StockSchema = new mongoose.Schema({
-    name: { type: String, required: true },
-    likes: { type: [String], default: [] }
-  }),
-  Stock = mongoose.model("Stock", StockSchema);
-
-mongoose.connect(process.env.MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-  useFindAndModify: false
-});
-
-async function getStockPrice(stock) {
-  const fetchResponse = await fetch(
-    `https://repeated-alpaca.glitch.me/v1/stock/${stock}/quote`
-  ).then(response => response.json());
-}
-
-async function addToStocksDB(stock, like) {
-  const returnedStock = await getStockPrice(stock);
-  const { symbol, price } = returnedStock;
-}
+const Stock = require("../models/stockModel"),
+  fetch = require("node-fetch");
 
 const getLikes = (stock, like, ip) => {
   if (like) {
@@ -53,7 +28,9 @@ const getLikes = (stock, like, ip) => {
 };
 
 const getStockData = async (like, stock, ip) => {
-  const stockData = await getStockPrice(stock);
+  const stockData = await fetch(
+    `https://repeated-alpaca.glitch.me/v1/stock/${stock}/quote`
+  ).then(response => response.json());
   const stockLikes = await getLikes(like, stock, ip);
 
   return {
@@ -66,6 +43,7 @@ const getStockData = async (like, stock, ip) => {
 module.exports = app => {
   app.route("/api/stock-prices").get(async (req, res) => {
     const { stock, like } = req.query;
+    let likes = 0;
 
     const ip =
       (req.headers["x-forwarded-for"] || "").split(",")[0] ||
@@ -77,30 +55,26 @@ module.exports = app => {
       try {
         const stockData = await Promise.all(
           stock.map(async stockItem => {
-            const data = await getStockData(like, stockItem, ip);
+            const data = await getStockData(like, stockItem.toUpperCase(), ip);
             return data;
           })
         );
 
         stockData.forEach((data, index) => {
           const relIndex = 1 % index == 0 ? 0 : 1;
-
           return (stockData[index].rel_likes =
             stockData[index].likes - stockData[relIndex].likes);
         });
 
-        // alternative to forEach above
-        stockData[0].rel_likes = stockData[0].likes - stockData[1].likes;
-        stockData[1].rel_likes = stockData[1].likes - stockData[0].likes;
         delete stockData[0].likes;
         delete stockData[1].likes;
-        res.status(200).json({ stockData});
+        res.status(200).json({ stockData });
       } catch {
         res.status(400).send("The stock(s) could not be found");
       }
     } else {
       try {
-        const stockData = await getStockData(like, stock, ip);
+        const stockData = await getStockData(like, stock.toUpperCase(), ip);
         res.status(200).json({ stockData });
       } catch {
         res.status(400).send("The stock could not be found");
