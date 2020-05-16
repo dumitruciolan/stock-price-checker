@@ -28,6 +28,9 @@ app.use(
   })
 );
 
+// needed for IP retrieving
+app.set("trust proxy", true);
+
 // Index page (static HTML)
 app
   .route("/")
@@ -57,7 +60,7 @@ app.listen(process.env.PORT || 3000, () => {
       } catch (error) {
         console.log("Tests are not valid: ", error);
       }
-    }, 3500);
+    }, 4000);
   }
 });
 

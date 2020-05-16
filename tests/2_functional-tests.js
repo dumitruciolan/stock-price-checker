@@ -63,7 +63,7 @@ suite("Functional Tests", () => {
       chai
         .request(server)
         .get("/api/stock-prices")
-        .query({ stock: ["goog", "msft"] })
+        .query({ stock: ["intl", "amzn"] })
         .end((err, res) => {
           assert.equal(res.status, 200);
           assert.property(res.body.stockData[0], "stock");
@@ -72,8 +72,8 @@ suite("Functional Tests", () => {
           assert.property(res.body.stockData[1], "stock");
           assert.property(res.body.stockData[1], "price");
           assert.property(res.body.stockData[1], "rel_likes");
-          assert.equal(res.body.stockData[0].stock, "GOOG");
-          assert.equal(res.body.stockData[1].stock, "MSFT");
+          assert.equal(res.body.stockData[0].stock, "INTL");
+          assert.equal(res.body.stockData[1].stock, "AMZN");
           done();
         });
     });
@@ -82,7 +82,7 @@ suite("Functional Tests", () => {
       chai
         .request(server)
         .get("/api/stock-prices")
-        .query({ stock: ["goog", "msft"], like: true })
+        .query({ stock: ["amd", "ibm"], like: true })
         .end((err, res) => {
           assert.equal(res.status, 200);
           assert.property(res.body.stockData[0], "stock");
@@ -91,8 +91,8 @@ suite("Functional Tests", () => {
           assert.property(res.body.stockData[1], "stock");
           assert.property(res.body.stockData[1], "price");
           assert.property(res.body.stockData[1], "rel_likes");
-          assert.equal(res.body.stockData[0].stock, "GOOG");
-          assert.equal(res.body.stockData[1].stock, "MSFT");
+          assert.equal(res.body.stockData[0].stock, "AMD");
+          assert.equal(res.body.stockData[1].stock, "IBM");
           done();
         });
     });
